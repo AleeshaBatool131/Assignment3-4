@@ -13,8 +13,8 @@ public class Admin extends User{
     private String adminId;
     private static int adminCount = 1;
 
-    public Admin(String username, String password, String email, String phoneNumber) {
-        super(username, password, "Admin", email, phoneNumber);
+    public Admin(String email, String phoneNumber) {
+        super("Admin", "admin", "Admin", email, phoneNumber);
         this.adminId = String.format("admin%04d",adminCount++);
     }
 
@@ -112,36 +112,36 @@ public class Admin extends User{
         plot.updatePlotDetails();
     }
 
-    public static void manageUsers(){
-        Scanner scanner = new Scanner(System.in);
-        List<User> users = loadUsers();
-
-        while (true) {
-            System.out.println("\n--- User Management Menu ---");
-            System.out.println("1. Add New User");
-            System.out.println("2. Delete User");
-            System.out.println("3. Update User");
-            System.out.println("4. View All Users");
-            System.out.println("5. Search User by ID");
-            System.out.println("6. Exit");
-            System.out.print("Enter your choice: ");
-            int choice = scanner.nextInt();
-
-            switch (choice) {
-                case 1 -> addUser(users, scanner);
-                case 2 -> deleteUser(users, scanner);
-                case 3 -> updateUser(users, scanner);
-                case 4 -> viewAllUsers(users);
-                case 5 -> searchUser(users, scanner);
-                case 6 -> {
-                    saveUsers(users);
-                    System.out.println("Exiting User Management.");
-                    return;
-                }
-                default -> System.out.println("Invalid choice! Please try again.");
-            }
-        }
-    }
+//    public static void manageUsers(){
+//        Scanner scanner = new Scanner(System.in);
+//        List<User> users = loadUsers();
+//
+//        while (true) {
+//            System.out.println("\n--- User Management Menu ---");
+//            System.out.println("1. Add New User");
+//            System.out.println("2. Delete User");
+//            System.out.println("3. Update User");
+//            System.out.println("4. View All Users");
+//            System.out.println("5. Search User by ID");
+//            System.out.println("6. Exit");
+//            System.out.print("Enter your choice: ");
+//            int choice = scanner.nextInt();
+//
+//            switch (choice) {
+//                case 1 -> addUser(users, scanner);
+//                case 2 -> deleteUser(users, scanner);
+//                case 3 -> updateUser(users, scanner);
+//                case 4 -> viewAllUsers(users);
+//                case 5 -> searchUser(users, scanner);
+//                case 6 -> {
+//                    saveUsers(users);
+//                    System.out.println("Exiting User Management.");
+//                    return;
+//                }
+//                default -> System.out.println("Invalid choice! Please try again.");
+//            }
+//        }
+//    }
 
     private static void addUser(List<User> users, Scanner scanner) {
         scanner.nextLine(); // Consume newline
@@ -233,26 +233,26 @@ public class Admin extends User{
         System.out.println("User not found!");
     }
 
-    private static List<User> loadUsers() {
-        List<User> users = null;
-        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(UserFileName))) {
-            users = (List<User>) inputStream.readObject();
-        } catch (FileNotFoundException e) {
-            System.out.println("Users file not found. Starting with an empty list.");
-            users = new ArrayList<>();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return users;
-    }
-
-    private static void saveUsers(List<User> users) {
-        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(UserFileName))) {
-            outputStream.writeObject(users);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    public static List<User> loadUsers() {
+//        List<User> users = null;
+//        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(UserFileName))) {
+//            users = (List<User>) inputStream.readObject();
+//        } catch (FileNotFoundException e) {
+//            System.out.println("Users file not found. Starting with an empty list.");
+//            users = new ArrayList<>();
+//        } catch (IOException | ClassNotFoundException e) {
+//            e.printStackTrace();
+//        }
+//        return users;
+//    }
+//
+//    public static void saveUsers(List<User> users) {
+//        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(UserFileName))) {
+//            outputStream.writeObject(users);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
     public static List<Payment> loadPayments(){
         List<Payment> payments = null;
         try(ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(PaymentFileName))){

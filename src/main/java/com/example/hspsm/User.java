@@ -8,7 +8,7 @@ import java.util.Scanner;
 
 public class User implements Serializable {
     public static String UserFileName = "Users.ser";
-    private static int userCount = 1;
+    public static int userCount = 1;
     private String userId;
     private String username;
     private String password;
@@ -26,6 +26,10 @@ public class User implements Serializable {
         this.phoneNumber = phoneNumber;
         this.registrationDate = LocalDate.now();
     }
+    public User(){
+
+    }
+
 
     public String getEmail() {
         return email;
@@ -163,10 +167,10 @@ public class User implements Serializable {
              if(!found)
                 System.out.println("User not Found");
     }
-    private List<User> loadUsers() {
-        List<User> users = null;
+    public List<User> loadUsers() {
+        List<User> users = new ArrayList<>();
         try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(UserFileName))) {
-            users = (List<User>) inputStream.readObject();
+            users = (ArrayList<User>) inputStream.readObject();
             userCount=users.size()+1;
         } catch (FileNotFoundException e) {
             System.out.println("Users file not found. Starting with an empty list.");
@@ -174,10 +178,13 @@ public class User implements Serializable {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
+        catch(NullPointerException e){
+            users = new ArrayList<>();
+        }
         return users;
     }
 
-    private void saveUsers(List<User> users) {
+    public void saveUsers(List<User> users) {
         try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(UserFileName))) {
             outputStream.writeObject(users);
         } catch (IOException e) {

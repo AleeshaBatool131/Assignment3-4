@@ -113,7 +113,7 @@ public class Payment {
     }
     public List<Payment> loadPayments(){
         List<Payment> payments = null;
-        try(ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("Payment.ser"))){
+        try(ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("Payments.ser"))){
             payments=(List<Payment>) inputStream.readObject();
         }
         catch (IOException e){
@@ -126,7 +126,7 @@ public class Payment {
     }
 
     public void savePayments(List<Payment> payments){
-        try(ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("Payment.ser"))){
+        try(ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("Payments.ser"))){
             outputStream.writeObject(payments);
         }
         catch (IOException e){
