@@ -10,13 +10,15 @@ import javafx.print.PrinterJob;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -33,115 +35,168 @@ public class HelloApplication extends Application{
         welcomeScreen(stage);
         stage.show();
     }
-    public void welcomeScreen(Stage stage){
 
+    public void welcomeScreen(Stage stage) {
         VBox vBox = new VBox();
+        vBox.setAlignment(Pos.CENTER);
+        vBox.setSpacing(30);
+        vBox.setPadding(new Insets(20));
+        vBox.setStyle("-fx-background-color: linear-gradient(to bottom, #34495e, #2c3e50);");
+
         Text welcome = new Text("Welcome to Housing Society Plot Management System");
         welcome.setTextAlignment(TextAlignment.CENTER);
-        vBox.setAlignment(Pos.CENTER);
-        vBox.getChildren().add(welcome);
-        Scene scene = new Scene(vBox, 800, 800);
+        welcome.setFill(Color.WHITE);
+        welcome.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-font-family: Arial;");
+
+
+        Button nextButton = new Button("Next");
+        nextButton.setStyle("-fx-background-color: #1abc9c; -fx-text-fill: white; -fx-padding: 10 20; -fx-font-size: 14px; -fx-font-family: Arial;");
+        nextButton.setOnAction(e -> loginScreen(stage));
+
+
+        vBox.getChildren().addAll(welcome, nextButton);
+
+        Scene scene = new Scene(vBox, 800, 600);
         stage.setScene(scene);
         stage.setTitle("Welcome Screen");
-        PauseTransition pause = new PauseTransition(Duration.seconds(4));
-        pause.setOnFinished(e -> loginScreen(stage)); // Transition to loginScreen after pause
-        pause.play();
     }
-    public static void loginScreen(Stage stage){
+    public static void loginScreen(Stage stage) {
         VBox vBox = new VBox();
-        Label usernameLabel = new Label("Username: ");
-        Label passwordLabel = new Label("Password: ");
+        vBox.setAlignment(Pos.CENTER);
+        vBox.setSpacing(20);
+        vBox.setPadding(new Insets(20));
+        vBox.setStyle("-fx-background-color: #ecf0f1;");
+
+        Label usernameLabel = new Label("Username:");
+        Label passwordLabel = new Label("Password:");
+        usernameLabel.setStyle("-fx-text-fill: #34495e; -fx-font-size: 18px; -fx-font-family: Arial; -fx-font-weight: bold;");
+        passwordLabel.setStyle("-fx-text-fill: #34495e; -fx-font-size: 18px; -fx-font-family: Arial; -fx-font-weight: bold;");
+
+
         TextField usernameField = new TextField();
+        usernameField.setPromptText("Enter your username");
+        usernameField.setStyle("-fx-font-size: 16px; -fx-padding: 10px; -fx-background-color: #fff; -fx-border-color: #ccc; -fx-border-radius: 5px;");
+
         PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText("Enter your password");
+        passwordField.setStyle("-fx-font-size: 16px; -fx-padding: 10px; -fx-background-color: #fff; -fx-border-color: #ccc; -fx-border-radius: 5px;");
+
+
         Button login = new Button("Login");
-        List<User> users = loadUsers();
+        Button admin = new Button("Login as Admin");
+        Button register = new Button("Sign Up");
+
+
+        String buttonStyle = "-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 12px 30px; -fx-font-size: 16px; -fx-font-family: Arial; -fx-border-radius: 5px;";
+
+        login.setStyle(buttonStyle);
+        admin.setStyle(buttonStyle);
+        register.setStyle(buttonStyle);
+
+
+        login.setOnMouseEntered(e -> login.setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-padding: 12px 30px; -fx-font-size: 16px; -fx-font-family: Arial; -fx-border-radius: 5px;"));
+        login.setOnMouseExited(e -> login.setStyle(buttonStyle));
+
+        admin.setOnMouseEntered(e -> admin.setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-padding: 12px 30px; -fx-font-size: 16px; -fx-font-family: Arial; -fx-border-radius: 5px;"));
+        admin.setOnMouseExited(e -> admin.setStyle(buttonStyle));
+
+        register.setOnMouseEntered(e -> register.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-padding: 12px 30px; -fx-font-size: 16px; -fx-font-family: Arial; -fx-border-radius: 5px;"));
+        register.setOnMouseExited(e -> register.setStyle(buttonStyle));
+
+
         Text invalidMessage = new Text();
         invalidMessage.setTextAlignment(TextAlignment.CENTER);
         invalidMessage.setFill(Color.RED);
-            login.setOnAction(e->{
-                boolean isValidUser = false;
-                if(users!=null)
-                {
-                    for(User user: users){
-                        if(user.getUsername().equals(usernameField.getText())&&user.getPassword().equals(passwordField.getText())){
-                            isValidUser = true;
-                            break;
-                        }
-                    }
-                }
-                if (isValidUser) {
-                    buyerDashboard(stage); // Proceed to buyer dashboard if valid
-                } else {
-                    invalidMessage.setText("Invalid Username or Password");
-                }
-            });
+        invalidMessage.setFont(Font.font("Arial", FontWeight.BOLD, 14));
 
-        vBox.setSpacing(5);
-        vBox.getChildren().addAll(usernameLabel, usernameField, passwordLabel,passwordField);
-        Button admin = new Button("Login as Admin");
-        Button register = new Button("Signup");
-        register.setOnAction(e->{
-            registerUser(stage);
+
+        List<User> users = loadUsers();
+        login.setOnAction(e -> {
+            boolean isValidUser = users.stream().anyMatch(user ->
+                    user.getUsername().equals(usernameField.getText()) &&
+                            user.getPassword().equals(passwordField.getText()));
+
+            if (isValidUser) {
+                buyerDashboard(stage);
+            } else {
+                invalidMessage.setText("Invalid Username or Password");
+            }
         });
-        admin.setOnAction(e->{
-            adminLoginScreen(stage);
-        });
-        vBox.getChildren().addAll(invalidMessage,login ,admin, register);
-        Scene scene = new Scene(vBox, 800, 800);
+
+        register.setOnAction(e -> registerUser(stage));
+        admin.setOnAction(e -> adminLoginScreen(stage));
+
+
+        GridPane inputGrid = new GridPane();
+        inputGrid.setAlignment(Pos.CENTER);
+        inputGrid.setHgap(10);
+        inputGrid.setVgap(10);
+        inputGrid.add(usernameLabel, 0, 0);
+        inputGrid.add(usernameField, 1, 0);
+        inputGrid.add(passwordLabel, 0, 1);
+        inputGrid.add(passwordField, 1, 1);
+
+
+        vBox.getChildren().addAll(inputGrid, invalidMessage, login, admin, register);
+
+        Scene scene = new Scene(vBox, 400, 450);
         stage.setScene(scene);
         stage.setTitle("Login Screen");
     }
-
     public static void adminDashboardScene(Stage stage) {
+
         VBox vBox = new VBox();
         vBox.setAlignment(Pos.CENTER);
-        vBox.setSpacing(10);
+        vBox.setSpacing(15);
+        vBox.setPadding(new Insets(20));
+
 
         Label titleLabel = new Label("Admin Dashboard");
-        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
-        vBox.getChildren().add(titleLabel);
+        titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #333333;");
 
-        // Buttons for different functionalities
-        Button manageUsersButton = new Button("Manage Users");
-        Button managePlotsButton = new Button("Manage Plots");
-        Button managePaymentsButton = new Button("Manage Payments");
-        Button generateReportsButton = new Button("Generate Reports");
-        Button systemSettingsButton = new Button("System Settings");
-        Button logoutButton = new Button("Logout");
 
-        // Add buttons to the VBox
-        vBox.getChildren().addAll(manageUsersButton, managePlotsButton, managePaymentsButton,
-                generateReportsButton, systemSettingsButton, logoutButton);
+        Button manageUsersButton = createStyledButton("Manage Users", "#4CAF50");
+        Button managePlotsButton = createStyledButton("Manage Plots", "#4CAF50");
+        Button managePaymentsButton = createStyledButton("Manage Payments", "#4CAF50");
+        Button generateReportsButton = createStyledButton("Generate Reports", "#4CAF50");
 
-        // Button action handlers
-        manageUsersButton.setOnAction(e -> {
-            UserManagementScene(stage);
+        Button logoutButton = createStyledButton("Logout", "#F44336");
 
-        });
 
-        managePlotsButton.setOnAction(e -> {
-            // Implement plot management functionality here
-            managePlotsScene(stage);
-        });
+        vBox.getChildren().addAll(
+                titleLabel,
+                manageUsersButton,
+                managePlotsButton,
+                managePaymentsButton,
+                generateReportsButton,
+                logoutButton
+        );
 
-        managePaymentsButton.setOnAction(e -> {
-            // Implement payment management functionality here
-           managePaymentsScene(stage);
-        });
 
-        generateReportsButton.setOnAction(e -> {
-            // Implement report generation functionality here
-            generateReportScene(stage);
-        });
+        manageUsersButton.setOnAction(e -> UserManagementScene(stage));
+        managePlotsButton.setOnAction(e -> managePlotsScene(stage));
+        managePaymentsButton.setOnAction(e -> managePaymentsScene(stage));
+        generateReportsButton.setOnAction(e -> generateReportScene(stage));
 
-        logoutButton.setOnAction(e -> {
-            // Implement logout functionality, e.g., return to login screen
-            loginScreen(stage);
-        });
+        logoutButton.setOnAction(e -> loginScreen(stage));
+
 
         Scene scene = new Scene(vBox, 800, 600);
         stage.setScene(scene);
         stage.setTitle("Admin Dashboard");
+    }
+
+
+    private static Button createStyledButton(String text, String color) {
+        Button button = new Button(text);
+        button.setStyle(
+                "-fx-background-color: " + color + "; " +
+                        "-fx-text-fill: white; " +
+                        "-fx-font-size: 14; " +
+                        "-fx-padding: 10 20; " +
+                        "-fx-background-radius: 5;"
+        );
+        return button;
     }
 
 
@@ -154,9 +209,9 @@ public class HelloApplication extends Application{
         titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
         vBox.getChildren().add(titleLabel);
 
-        // Table to display users
+
         TableView<User> userTable = new TableView<>();
-        userTable.setItems(loadUsers()); // Load users into the table
+        userTable.setItems(loadUsers());
 
         TableColumn<User, String> idColumn = new TableColumn<>("User ID");
         idColumn.setCellValueFactory(new PropertyValueFactory<>("userId"));
@@ -175,12 +230,12 @@ public class HelloApplication extends Application{
 
         userTable.getColumns().addAll(idColumn, usernameColumn, roleColumn, emailColumn, phoneColumn);
 
-        // Buttons for user management actions
+
         Button addButton = new Button("Add User");
         Button editButton = new Button("Edit User");
         Button deleteButton = new Button("Delete User");
 
-        // Add user functionality
+
         addButton.setOnAction(e -> {
             Stage addStage = new Stage();
             VBox addVBox = new VBox(10);
@@ -215,7 +270,7 @@ public class HelloApplication extends Application{
             addStage.show();
         });
 
-        // Edit user functionality
+
         editButton.setOnAction(e -> {
             User selectedUser = userTable.getSelectionModel().getSelectedItem();
             if (selectedUser != null) {
@@ -237,7 +292,7 @@ public class HelloApplication extends Application{
                     selectedUser.setEmail(emailField.getText());
                     selectedUser.setPhoneNumber(phoneField.getText());
                     selectedUser.setRole(roleField.getText());
-                    userTable.refresh(); // Refresh table to reflect changes
+                    userTable.refresh();
                     saveUsers(userTable.getItems());
                     editStage.close();
                 });
@@ -249,7 +304,7 @@ public class HelloApplication extends Application{
             }
         });
 
-        // Delete user functionality
+
         deleteButton.setOnAction(e -> {
             User selectedUser = userTable.getSelectionModel().getSelectedItem();
             if (selectedUser != null) {
@@ -258,11 +313,11 @@ public class HelloApplication extends Application{
             }
         });
 
-        // Back button to return to admin dashboard
+
         Button backButton = new Button("Back");
         backButton.setOnAction(e -> adminDashboardScene(stage));
 
-        // Layout adjustments
+
         HBox buttonBox = new HBox(10, addButton, editButton, deleteButton);
         buttonBox.setAlignment(Pos.CENTER);
 
@@ -282,9 +337,9 @@ public class HelloApplication extends Application{
         titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
         vBox.getChildren().add(titleLabel);
 
-        // Table to display plots
+
         TableView<Plot> plotTable = new TableView<>();
-        plotTable.setItems(loadPlots()); // Load plots into the table
+        plotTable.setItems(loadPlots());
 
         TableColumn<Plot, Integer> idColumn = new TableColumn<>("Plot ID");
         idColumn.setCellValueFactory(new PropertyValueFactory<>("plotId"));
@@ -321,12 +376,12 @@ public class HelloApplication extends Application{
 
         plotTable.getColumns().addAll(idColumn, numberColumn, lengthColumn, widthColumn, areaColumn, locationColumn, gpsColumn, statusColumn, priceUnitColumn, priceColumn, developmentColumn);
 
-        // Buttons for plot management actions
+
         Button addButton = new Button("Add Plot");
         Button editButton = new Button("Edit Plot");
         Button deleteButton = new Button("Delete Plot");
 
-        // Add plot functionality
+
         addButton.setOnAction(e -> {
             Stage addStage = new Stage();
             VBox addVBox = new VBox(10);
@@ -380,7 +435,7 @@ public class HelloApplication extends Application{
             addStage.show();
         });
 
-        // Edit plot functionality
+
         editButton.setOnAction(e -> {
             Plot selectedPlot = plotTable.getSelectionModel().getSelectedItem();
             if (selectedPlot != null) {
@@ -441,7 +496,7 @@ public class HelloApplication extends Application{
             }
         });
 
-        // Delete plot functionality
+
         deleteButton.setOnAction(e -> {
             Plot selectedPlot = plotTable.getSelectionModel().getSelectedItem();
             if (selectedPlot != null) {
@@ -450,11 +505,11 @@ public class HelloApplication extends Application{
             }
         });
 
-        // Back button to return to admin dashboard
+
         Button backButton = new Button("Back");
         backButton.setOnAction(e -> adminDashboardScene(stage));
 
-        // Layout adjustments
+
         HBox buttonBox = new HBox(10, addButton, editButton, deleteButton);
         buttonBox.setAlignment(Pos.CENTER);
 
@@ -469,18 +524,19 @@ public class HelloApplication extends Application{
         VBox layout = new VBox(10);
         layout.setPadding(new Insets(10));
 
-        // Display all payments
-        ListView<Payment> paymentListView = new ListView<>();
-        paymentListView.getItems().setAll(loadPayments());  // Assuming loadPayments() returns the list of payments
+        Button backButton = new Button("Back");
+        backButton.setOnAction(e -> adminDashboardScene(stage));
 
-        // Button to add a new payment
+        ListView<Payment> paymentListView = new ListView<>();
+        paymentListView.getItems().setAll(loadPayments());
+
         Button addPaymentButton = new Button("Add Payment");
         addPaymentButton.setOnAction(e -> {
-            // Open a new scene to add payment details (you can implement a dialog or new scene here)
+
             System.out.println("Adding a new payment...");
         });
 
-        // Button to remove a selected payment
+
         Button removePaymentButton = new Button("Remove Payment");
         removePaymentButton.setOnAction(e -> {
             Payment selectedPayment = paymentListView.getSelectionModel().getSelectedItem();
@@ -488,29 +544,29 @@ public class HelloApplication extends Application{
                 ObservableList<Payment> payments = loadPayments();
                 payments.remove(selectedPayment);
                 savePayments(payments);
-                paymentListView.getItems().setAll(loadPayments()); // Refresh the list view
+                paymentListView.getItems().setAll(loadPayments());
                 System.out.println("Payment removed: " + selectedPayment);
             } else {
                 System.out.println("Please select a payment to remove.");
             }
         });
 
-        // Button to update payment details
+
         Button updatePaymentButton = new Button("Update Payment");
         updatePaymentButton.setOnAction(e -> {
             Payment selectedPayment = paymentListView.getSelectionModel().getSelectedItem();
             if (selectedPayment != null) {
-                // Open a new scene or dialog to update payment details
+
                 System.out.println("Updating payment: " + selectedPayment);
             } else {
                 System.out.println("Please select a payment to update.");
             }
         });
 
-        // Add components to layout
-        layout.getChildren().addAll(paymentListView, addPaymentButton, removePaymentButton, updatePaymentButton);
 
-        // Create and show the scene
+        layout.getChildren().addAll(paymentListView, addPaymentButton, removePaymentButton, updatePaymentButton,backButton);
+
+
         Scene scene = new Scene(layout, 400, 400);
         stage.setScene(scene);
         stage.setTitle("Manage Payments");
@@ -520,50 +576,50 @@ public class HelloApplication extends Application{
         VBox layout = new VBox(10);
         layout.setPadding(new Insets(10));
 
-        // Generate the report (can be based on the Analytics class or Admin methods)
-        String report = generateReports();  // Assuming generateReports() generates a report string
-        String plotStatistics = analyzePlotStatistics();  // Assuming analyzePlotStatistics() returns plot statistics
 
-        // Display the reports in TextAreas or Labels
+        String report = generateReports();
+        String plotStatistics = analyzePlotStatistics();
+
+
         final TextArea reportTextArea = new TextArea(report + "\n\n" + plotStatistics);
-        reportTextArea.setEditable(false);  // Make the report area read-only
+        reportTextArea.setEditable(false);
         reportTextArea.setWrapText(true);
 
-        // Button to print the report (or generate a PDF if needed)
+
         Button printButton = new Button("Print Report");
         reportTextArea.setEditable(false);
 
-        // Sample report data - you will call the report generation method here
+
         reportTextArea.setText(report);
-        // Print button logic
+
         printButton.setOnAction(e -> {
-            // Print the content of reportTextArea
+
             String contentToPrint = reportTextArea.getText();
             if (!contentToPrint.isEmpty()) {
-                print(contentToPrint);  // You need to implement this print function
+                print(contentToPrint);
             } else {
                 Alert alert = new Alert(Alert.AlertType.WARNING, "No report to print!");
                 alert.show();
             }
         });
 
-        // Button to close the report scene
+
         Button closeButton = new Button("Close");
         closeButton.setOnAction(e -> {
-            stage.close();  // Close the report scene
+            stage.close();
         });
 
-        // Add components to layout
+
         layout.getChildren().addAll(reportTextArea, printButton, closeButton);
 
-        // Create and show the scene
+
         Scene scene = new Scene(layout, 600, 400);
         stage.setScene(scene);
         stage.setTitle("Generate Report");
         stage.show();
     }
     private static void print(String content) {
-        // Create a PrinterJob
+
         PrinterJob printerJob = PrinterJob.createPrinterJob();
 
         if (printerJob == null) {
@@ -572,15 +628,15 @@ public class HelloApplication extends Application{
             return;
         }
 
-        // Prepare the content to print
-        Text printableContent = new Text(content);
-        printableContent.setWrappingWidth(500); // Set the width for the printable text if needed
 
-        // Show print dialog to the user
-        boolean proceed = printerJob.showPrintDialog(null); // Pass a stage here if available
+        Text printableContent = new Text(content);
+        printableContent.setWrappingWidth(500);
+
+
+        boolean proceed = printerJob.showPrintDialog(null);
 
         if (proceed) {
-            // Print the content
+
             boolean success = printerJob.printPage(printableContent);
 
             if (success) {
@@ -597,80 +653,146 @@ public class HelloApplication extends Application{
             alert.show();
         }
     }
-    public static void buyerDashboard(Stage stage){
+    public static void buyerDashboard(Stage stage) {
+        // Main VBox layout
         VBox vBox = new VBox();
+        vBox.setAlignment(Pos.CENTER);
+        vBox.setSpacing(15);
+        vBox.setPadding(new Insets(20));
+
+        // Create buttons
         Button viewPlots = new Button("View Available Plots");
         Button requestPlot = new Button("Request Plot");
         Button ownershipDetails = new Button("Ownership Details");
         Button trackPaymentStatus = new Button("Track Payment Status");
         Button updatePreference = new Button("Update Preference");
+        Button viewMap = new Button("View Map"); // New Map button
         Button exit = new Button("Exit");
         Button logout = new Button("Logout");
-        viewPlots.setOnAction(e->{
-            viewPlots(stage);
+
+        // Set button styles
+        String buttonStyle = "-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-padding: 10 20; -fx-font-size: 14;";
+        viewPlots.setStyle(buttonStyle);
+        requestPlot.setStyle(buttonStyle);
+        ownershipDetails.setStyle(buttonStyle);
+        trackPaymentStatus.setStyle(buttonStyle);
+        updatePreference.setStyle(buttonStyle);
+        viewMap.setStyle(buttonStyle); // Style for the new button
+        logout.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-padding: 10 20; -fx-font-size: 14;");
+        exit.setStyle("-fx-background-color: #F44336; -fx-text-fill: white; -fx-padding: 10 20; -fx-font-size: 14;");
+
+        // Set button actions
+        viewPlots.setOnAction(e -> viewPlots(stage));
+        requestPlot.setOnAction(e -> requestPlot(stage));
+        ownershipDetails.setOnAction(e -> ownershipDetails(stage));
+        trackPaymentStatus.setOnAction(e -> trackPaymentStatus(stage));
+        updatePreference.setOnAction(e -> updatePreference(stage));
+
+        viewMap.setOnAction(e -> {
+            stage.setScene(ViewMap.getMainScene(stage));
         });
-        requestPlot.setOnAction(e->{
-            requestPlot(stage);
+
+        logout.setOnAction(e -> {
+            loginScreen(stage);
         });
-        ownershipDetails.setOnAction(e->{
-            ownershipDetails(stage);
-        });
-        trackPaymentStatus.setOnAction(e->{
-            trackPaymentStatus(stage);
-        });
-        updatePreference.setOnAction(e->{
-            updatePreference(stage);
-        });
-        logout.setOnAction(e->{
-            buyerDashboard(stage);
-        });
-        exit.setOnAction(e->{
-            stage.close();
-        });
-        vBox.getChildren().addAll(viewPlots,requestPlot,ownershipDetails,trackPaymentStatus,updatePreference,exit, logout);
-        Scene scene = new Scene(vBox, 800, 800);
+        exit.setOnAction(e -> stage.close());
+
+        // Add buttons to VBox
+        vBox.getChildren().addAll(
+                viewPlots,
+                requestPlot,
+                ownershipDetails,
+                trackPaymentStatus,
+                updatePreference,
+                viewMap, // Added the view map button
+                logout,
+                exit
+        );
+
+        // Create scene and set on stage
+        Scene scene = new Scene(vBox, 400, 500);
         stage.setScene(scene);
         stage.setTitle("Buyer Dashboard");
     }
-    public static void adminLoginScreen(Stage stage){
+
+    public static void adminLoginScreen(Stage stage) {
+        // VBox for main layout
         VBox vBox = new VBox();
+        vBox.setAlignment(Pos.CENTER);
+        vBox.setSpacing(20);
+        vBox.setPadding(new Insets(20));
+
+        // Labels and fields
         Label usernameLabel = new Label("Username: ");
         Label passwordLabel = new Label("Password: ");
         TextField usernameField = new TextField();
+        usernameField.setPromptText("Enter admin username");
         PasswordField passwordField = new PasswordField();
-        vBox.getChildren().addAll(usernameLabel,usernameField,passwordLabel,passwordField);
+        passwordField.setPromptText("Enter admin password");
+
+        // Login button
+        Button login = new Button("Login");
+        login.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-padding: 10 20;");
+
+        // Error message text
+        Text invalidMessage = new Text();
+        invalidMessage.setTextAlignment(TextAlignment.CENTER);
+        invalidMessage.setFill(Color.RED);
+        invalidMessage.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+
+        // Load users and handle admin login
         User userObj = new User();
         List<User> users = userObj.loadUsers();
-        Button login = new Button("Login");
-        login.setOnAction(e->{
-            if(users!=null){
-                for(User user: users){
-                    if("Admin".equals(usernameField.getText())&&"admin".equals(passwordField.getText())){
-                        adminDashboardScene(stage);
-                        break;
-                    }
-                    else{
-                        Text invalid = new Text("Invalid Username or Password");
-                        vBox.getChildren().add(invalid);
-                    }
-                }
+        login.setOnAction(e -> {
+            boolean isAdmin = "Admin".equals(usernameField.getText()) && "admin".equals(passwordField.getText());
+            if (isAdmin) {
+                adminDashboardScene(stage);
+            } else {
+                invalidMessage.setText("Invalid Username or Password");
             }
-
         });
-        vBox.getChildren().add(login);
-        Scene scene = new Scene(vBox, 800, 800);
+
+        // Layout for username and password inputs
+        GridPane inputGrid = new GridPane();
+        inputGrid.setAlignment(Pos.CENTER);
+        inputGrid.setHgap(10);
+        inputGrid.setVgap(10);
+        inputGrid.add(usernameLabel, 0, 0);
+        inputGrid.add(usernameField, 1, 0);
+        inputGrid.add(passwordLabel, 0, 1);
+        inputGrid.add(passwordField, 1, 1);
+
+        // Add components to the VBox
+        vBox.getChildren().addAll(inputGrid, invalidMessage, login);
+
+        // Scene and stage setup
+        Scene scene = new Scene(vBox, 400, 400);
         stage.setScene(scene);
-        stage.setTitle("Login Screen");
+        stage.setTitle("Admin Login");
     }
-    public static void registerUser(Stage stage){
+    public static void registerUser(Stage stage) {
         VBox vBox = new VBox();
-        Label username = new Label("Username: ");
-        Label password = new Label("Password: ");
-        Label email = new Label ("Email: ");
-        Label phoneNumber = new Label("Phone Number: ");
-        Label preferredLocation = new Label("Preferred Location: ");
-        Label preferredSize = new Label("Preferred Size: ");
-        Label budget = new Label("Budget: ");
+        vBox.setAlignment(Pos.CENTER);
+        vBox.setSpacing(15);
+        vBox.setPadding(new Insets(10));
+        vBox.setStyle("-fx-background-color: linear-gradient(to bottom, #8e44ad, #3498db);");
+
+        Label username = new Label("Username:");
+        Label password = new Label("Password:");
+        Label email = new Label("Email:");
+        Label phoneNumber = new Label("Phone Number:");
+        Label preferredLocation = new Label("Preferred Location:");
+        Label preferredSize = new Label("Preferred Size:");
+        Label budget = new Label("Budget:");
+
+        username.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-family: Arial;");
+        password.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-family: Arial;");
+        email.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-family: Arial;");
+        phoneNumber.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-family: Arial;");
+        preferredLocation.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-family: Arial;");
+        preferredSize.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-family: Arial;");
+        budget.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-family: Arial;");
+
         TextField usernameField = new TextField();
         PasswordField passwordField = new PasswordField();
         TextField emailField = new TextField();
@@ -678,22 +800,26 @@ public class HelloApplication extends Application{
         TextField preferredLocationField = new TextField();
         TextField preferredSizeField = new TextField();
         TextField budgetField = new TextField();
-        vBox.getChildren().addAll(username,usernameField,password, passwordField, email, emailField, phoneNumber, phoneNumberField, preferredLocation, preferredLocationField, preferredSize, preferredSizeField, budget, budgetField);
-        Button login = new Button("Login");
-        login.setOnAction(e->{
+
+        Button register = new Button("Register");
+        register.setStyle("-fx-background-color: #1abc9c; -fx-text-fill: white; -fx-padding: 10 20; -fx-font-size: 14px; -fx-font-family: Arial;");
+
+        register.setOnAction(e -> {
             List<User> users = loadUsers();
             List<Buyer> buyers = loadBuyers();
-            Buyer buyer = new Buyer(usernameField.getText(), passwordField.getText(), "Buyer", emailField.getText(), phoneNumberField.getText(), preferredLocationField.getText(),Double.parseDouble(preferredSizeField.getText()),Double.parseDouble(budgetField.getText()));
+            Buyer buyer = new Buyer(usernameField.getText(), passwordField.getText(), "Buyer", emailField.getText(), phoneNumberField.getText(), preferredLocationField.getText(), Double.parseDouble(preferredSizeField.getText()), Double.parseDouble(budgetField.getText()));
             buyers.add(buyer);
             users.add(buyer);
-            saveBuyers((ObservableList<Buyer>) buyers);
-            saveUsers((ObservableList<User>) users);
+            saveBuyers(FXCollections.observableArrayList(buyers));
+            saveUsers(FXCollections.observableArrayList(users));
             buyerDashboard(stage);
         });
-        vBox.getChildren().add(login);
-        Scene scene = new Scene(vBox, 800, 800);
+
+        vBox.getChildren().addAll(username, usernameField, password, passwordField, email, emailField, phoneNumber, phoneNumberField, preferredLocation, preferredLocationField, preferredSize, preferredSizeField, budget, budgetField, register);
+
+        Scene scene = new Scene(vBox, 500, 600);
         stage.setScene(scene);
-        stage.setTitle("Login Screen");
+        stage.setTitle("Register User");
     }
 
     private static void viewPlots(Stage stage){
