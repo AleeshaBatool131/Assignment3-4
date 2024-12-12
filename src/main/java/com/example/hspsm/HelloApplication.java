@@ -1,28 +1,36 @@
 package com.example.hspsm;
 
+import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.print.PrinterJob;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.time.LocalDate;
 import java.util.*;
 
 import java.io.*;
 
+import static com.example.hspsm.Admin.analyzePlotStatistics;
+import static com.example.hspsm.Admin.generateReports;
+
 public class HelloApplication extends Application{
     public static int userCount = 1;
     @Override
     public void start(Stage stage) throws IOException {
         welcomeScreen(stage);
-        //adminDashboardScene(stage,root);
         stage.show();
     }
     public void welcomeScreen(Stage stage){
@@ -35,13 +43,9 @@ public class HelloApplication extends Application{
         Scene scene = new Scene(vBox, 800, 800);
         stage.setScene(scene);
         stage.setTitle("Welcome Screen");
-        try{
-            Thread.sleep(200);
-        }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        loginScreen(stage);
+        PauseTransition pause = new PauseTransition(Duration.seconds(4));
+        pause.setOnFinished(e -> loginScreen(stage)); // Transition to loginScreen after pause
+        pause.play();
     }
     public static void loginScreen(Stage stage){
         VBox vBox = new VBox();
@@ -50,34 +54,27 @@ public class HelloApplication extends Application{
         TextField usernameField = new TextField();
         PasswordField passwordField = new PasswordField();
         Button login = new Button("Login");
-    //    Button login = new Button("Login");
-        login.setOnAction(e -> {
-            if (usernameField.getText().equals("admin") && passwordField.getText().equals("admin")) {
-                adminDashboardScene(stage);
-            } else {
-                // Handle invalid credentials
-                Text invalid = new Text("Invalid Username or Password");
-                vBox.getChildren().add(invalid);
-            }
-        });
-
         List<User> users = loadUsers();
-        if(users!=null)
-        {
-            for(User user: users){
-                if(user.getUsername().equals(usernameField.getText())&&user.getPassword().equals(passwordField.getText())){
-                    adminDashboardScene(stage);
-                    break;
+        Text invalidMessage = new Text();
+        invalidMessage.setTextAlignment(TextAlignment.CENTER);
+        invalidMessage.setFill(Color.RED);
+            login.setOnAction(e->{
+                boolean isValidUser = false;
+                if(users!=null)
+                {
+                    for(User user: users){
+                        if(user.getUsername().equals(usernameField.getText())&&user.getPassword().equals(passwordField.getText())){
+                            isValidUser = true;
+                            break;
+                        }
+                    }
                 }
-                else{
-                    Text invalid = new Text("Invalid Username or Password");
-                    vBox.getChildren().add(invalid);
+                if (isValidUser) {
+                    buyerDashboard(stage); // Proceed to buyer dashboard if valid
+                } else {
+                    invalidMessage.setText("Invalid Username or Password");
                 }
-            }
-        }
-        login.setOnAction(e->{
-            buyerDashboard(stage);
-        });
+            });
 
         vBox.setSpacing(5);
         vBox.getChildren().addAll(usernameLabel, usernameField, passwordLabel,passwordField);
@@ -89,7 +86,7 @@ public class HelloApplication extends Application{
         admin.setOnAction(e->{
             adminLoginScreen(stage);
         });
-        vBox.getChildren().addAll(login ,admin, register);
+        vBox.getChildren().addAll(invalidMessage,login ,admin, register);
         Scene scene = new Scene(vBox, 800, 800);
         stage.setScene(scene);
         stage.setTitle("Login Screen");
@@ -118,32 +115,23 @@ public class HelloApplication extends Application{
 
         // Button action handlers
         manageUsersButton.setOnAction(e -> {
-            // Implement user management functionality here
-            // This might involve displaying a table of users, providing options to add, edit, or delete users
-            // ...
-            // For example, you could create a new scene:
-            UserManagementScene userManagementScene = new UserManagementScene(stage);
-            stage.setScene(userManagementScene.getScene());
+            UserManagementScene(stage);
+
         });
 
         managePlotsButton.setOnAction(e -> {
             // Implement plot management functionality here
-            // ...
+            managePlotsScene(stage);
         });
 
         managePaymentsButton.setOnAction(e -> {
             // Implement payment management functionality here
-            // ...
+           managePaymentsScene(stage);
         });
 
         generateReportsButton.setOnAction(e -> {
             // Implement report generation functionality here
-            // ...
-        });
-
-        systemSettingsButton.setOnAction(e -> {
-            // Implement system settings functionality here
-            // ...
+            generateReportScene(stage);
         });
 
         logoutButton.setOnAction(e -> {
@@ -156,29 +144,457 @@ public class HelloApplication extends Application{
         stage.setTitle("Admin Dashboard");
     }
 
-    static class UserManagementScene {
-        private final Scene scene;
 
-        public UserManagementScene(Stage stage) {
-            VBox vBox = new VBox();
-            vBox.setAlignment(Pos.CENTER);
-            vBox.setSpacing(10);
+    public static void UserManagementScene(Stage stage) {
+        VBox vBox = new VBox();
+        vBox.setAlignment(Pos.CENTER);
+        vBox.setSpacing(10);
 
-            Label titleLabel = new Label("User Management");
-            titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
-            vBox.getChildren().add(titleLabel);
+        Label titleLabel = new Label("User Management");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+        vBox.getChildren().add(titleLabel);
 
-            // ... Add controls for adding, editing, and deleting users
+        // Table to display users
+        TableView<User> userTable = new TableView<>();
+        userTable.setItems(loadUsers()); // Load users into the table
 
-            Button backButton = new Button("Back");
-            backButton.setOnAction(e -> adminDashboardScene(stage));
-            vBox.getChildren().add(backButton);
+        TableColumn<User, String> idColumn = new TableColumn<>("User ID");
+        idColumn.setCellValueFactory(new PropertyValueFactory<>("userId"));
 
-            scene = new Scene(vBox, 800, 600);
+        TableColumn<User, String> usernameColumn = new TableColumn<>("Username");
+        usernameColumn.setCellValueFactory(new PropertyValueFactory<>("username"));
+
+        TableColumn<User, String> roleColumn = new TableColumn<>("Role");
+        roleColumn.setCellValueFactory(new PropertyValueFactory<>("role"));
+
+        TableColumn<User, String> emailColumn = new TableColumn<>("Email");
+        emailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
+
+        TableColumn<User, String> phoneColumn = new TableColumn<>("Phone");
+        phoneColumn.setCellValueFactory(new PropertyValueFactory<>("phoneNumber"));
+
+        userTable.getColumns().addAll(idColumn, usernameColumn, roleColumn, emailColumn, phoneColumn);
+
+        // Buttons for user management actions
+        Button addButton = new Button("Add User");
+        Button editButton = new Button("Edit User");
+        Button deleteButton = new Button("Delete User");
+
+        // Add user functionality
+        addButton.setOnAction(e -> {
+            Stage addStage = new Stage();
+            VBox addVBox = new VBox(10);
+            addVBox.setAlignment(Pos.CENTER);
+
+            TextField usernameField = new TextField();
+            usernameField.setPromptText("Username");
+
+            PasswordField passwordField = new PasswordField();
+            passwordField.setPromptText("Password");
+
+            TextField roleField = new TextField();
+            roleField.setPromptText("Role (Admin/Buyer)");
+
+            TextField emailField = new TextField();
+            emailField.setPromptText("Email");
+
+            TextField phoneField = new TextField();
+            phoneField.setPromptText("Phone Number");
+
+            Button saveButton = new Button("Save");
+            saveButton.setOnAction(event -> {
+                ObservableList<User> users = userTable.getItems();
+                users.add(new User(usernameField.getText(), passwordField.getText(), roleField.getText(), emailField.getText(), phoneField.getText()));
+                saveUsers(users);
+                addStage.close();
+            });
+
+            addVBox.getChildren().addAll(usernameField, passwordField, roleField, emailField, phoneField, saveButton);
+            addStage.setScene(new Scene(addVBox, 300, 400));
+            addStage.setTitle("Add User");
+            addStage.show();
+        });
+
+        // Edit user functionality
+        editButton.setOnAction(e -> {
+            User selectedUser = userTable.getSelectionModel().getSelectedItem();
+            if (selectedUser != null) {
+                Stage editStage = new Stage();
+                VBox editVBox = new VBox(10);
+                editVBox.setAlignment(Pos.CENTER);
+
+                TextField emailField = new TextField(selectedUser.getEmail());
+                emailField.setPromptText("Email");
+
+                TextField phoneField = new TextField(selectedUser.getPhoneNumber());
+                phoneField.setPromptText("Phone Number");
+
+                TextField roleField = new TextField(selectedUser.getRole());
+                roleField.setPromptText("Role (Admin/Buyer)");
+
+                Button saveButton = new Button("Save Changes");
+                saveButton.setOnAction(event -> {
+                    selectedUser.setEmail(emailField.getText());
+                    selectedUser.setPhoneNumber(phoneField.getText());
+                    selectedUser.setRole(roleField.getText());
+                    userTable.refresh(); // Refresh table to reflect changes
+                    saveUsers(userTable.getItems());
+                    editStage.close();
+                });
+
+                editVBox.getChildren().addAll(emailField, phoneField, roleField, saveButton);
+                editStage.setScene(new Scene(editVBox, 300, 300));
+                editStage.setTitle("Edit User");
+                editStage.show();
+            }
+        });
+
+        // Delete user functionality
+        deleteButton.setOnAction(e -> {
+            User selectedUser = userTable.getSelectionModel().getSelectedItem();
+            if (selectedUser != null) {
+                userTable.getItems().remove(selectedUser);
+                saveUsers(userTable.getItems());
+            }
+        });
+
+        // Back button to return to admin dashboard
+        Button backButton = new Button("Back");
+        backButton.setOnAction(e -> adminDashboardScene(stage));
+
+        // Layout adjustments
+        HBox buttonBox = new HBox(10, addButton, editButton, deleteButton);
+        buttonBox.setAlignment(Pos.CENTER);
+
+        vBox.getChildren().addAll(userTable, buttonBox, backButton);
+
+        Scene scene = new Scene(vBox, 800, 600);
+        stage.setScene(scene);
+        stage.setTitle("User Management");
+    }
+
+    public static void managePlotsScene(Stage stage) {
+        VBox vBox = new VBox();
+        vBox.setAlignment(Pos.CENTER);
+        vBox.setSpacing(10);
+
+        Label titleLabel = new Label("Plot Management");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+        vBox.getChildren().add(titleLabel);
+
+        // Table to display plots
+        TableView<Plot> plotTable = new TableView<>();
+        plotTable.setItems(loadPlots()); // Load plots into the table
+
+        TableColumn<Plot, Integer> idColumn = new TableColumn<>("Plot ID");
+        idColumn.setCellValueFactory(new PropertyValueFactory<>("plotId"));
+
+        TableColumn<Plot, String> numberColumn = new TableColumn<>("Plot Number");
+        numberColumn.setCellValueFactory(new PropertyValueFactory<>("plotNumber"));
+
+        TableColumn<Plot, Double> lengthColumn = new TableColumn<>("Length");
+        lengthColumn.setCellValueFactory(new PropertyValueFactory<>("length"));
+
+        TableColumn<Plot, Double> widthColumn = new TableColumn<>("Width");
+        widthColumn.setCellValueFactory(new PropertyValueFactory<>("width"));
+
+        TableColumn<Plot, Double> areaColumn = new TableColumn<>("Total Area");
+        areaColumn.setCellValueFactory(new PropertyValueFactory<>("totalArea"));
+
+        TableColumn<Plot, String> locationColumn = new TableColumn<>("Location");
+        locationColumn.setCellValueFactory(new PropertyValueFactory<>("location"));
+
+        TableColumn<Plot, String> gpsColumn = new TableColumn<>("GPS Coordinates");
+        gpsColumn.setCellValueFactory(new PropertyValueFactory<>("gpsCoordinates"));
+
+        TableColumn<Plot, String> statusColumn = new TableColumn<>("Status");
+        statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
+
+        TableColumn<Plot, Double> priceUnitColumn = new TableColumn<>("Price Per Unit");
+        priceUnitColumn.setCellValueFactory(new PropertyValueFactory<>("pricePerUnit"));
+
+        TableColumn<Plot, Double> priceColumn = new TableColumn<>("Total Price");
+        priceColumn.setCellValueFactory(new PropertyValueFactory<>("totalPrice"));
+
+        TableColumn<Plot, String> developmentColumn = new TableColumn<>("Development Status");
+        developmentColumn.setCellValueFactory(new PropertyValueFactory<>("developmentStatus"));
+
+        plotTable.getColumns().addAll(idColumn, numberColumn, lengthColumn, widthColumn, areaColumn, locationColumn, gpsColumn, statusColumn, priceUnitColumn, priceColumn, developmentColumn);
+
+        // Buttons for plot management actions
+        Button addButton = new Button("Add Plot");
+        Button editButton = new Button("Edit Plot");
+        Button deleteButton = new Button("Delete Plot");
+
+        // Add plot functionality
+        addButton.setOnAction(e -> {
+            Stage addStage = new Stage();
+            VBox addVBox = new VBox(10);
+            addVBox.setAlignment(Pos.CENTER);
+
+            TextField numberField = new TextField();
+            numberField.setPromptText("Plot Number");
+
+            TextField lengthField = new TextField();
+            lengthField.setPromptText("Length");
+
+            TextField widthField = new TextField();
+            widthField.setPromptText("Width");
+
+            TextField locationField = new TextField();
+            locationField.setPromptText("Location");
+
+            TextField gpsField = new TextField();
+            gpsField.setPromptText("GPS Coordinates");
+
+            TextField statusField = new TextField();
+            statusField.setPromptText("Status");
+
+            TextField priceUnitField = new TextField();
+            priceUnitField.setPromptText("Price Per Unit");
+
+            TextField developmentField = new TextField();
+            developmentField.setPromptText("Development Status");
+
+            Button saveButton = new Button("Save");
+            saveButton.setOnAction(event -> {
+                try {
+                    int newId = plotTable.getItems().size() + 1;
+                    double length = Double.parseDouble(lengthField.getText());
+                    double width = Double.parseDouble(widthField.getText());
+                    double pricePerUnit = Double.parseDouble(priceUnitField.getText());
+
+                    Plot newPlot = new Plot(newId, numberField.getText(), length, width, locationField.getText(), gpsField.getText(), statusField.getText(), pricePerUnit, developmentField.getText());
+                    ObservableList<Plot> plots = plotTable.getItems();
+                    plots.add(newPlot);
+                    savePlots(plots);
+                    addStage.close();
+                } catch (NumberFormatException ex) {
+                    System.out.println("Invalid input values.");
+                }
+            });
+
+            addVBox.getChildren().addAll(numberField, lengthField, widthField, locationField, gpsField, statusField, priceUnitField, developmentField, saveButton);
+            addStage.setScene(new Scene(addVBox, 400, 500));
+            addStage.setTitle("Add Plot");
+            addStage.show();
+        });
+
+        // Edit plot functionality
+        editButton.setOnAction(e -> {
+            Plot selectedPlot = plotTable.getSelectionModel().getSelectedItem();
+            if (selectedPlot != null) {
+                Stage editStage = new Stage();
+                VBox editVBox = new VBox(10);
+                editVBox.setAlignment(Pos.CENTER);
+
+                TextField numberField = new TextField(selectedPlot.getPlotNumber());
+                numberField.setPromptText("Plot Number");
+
+                TextField lengthField = new TextField(String.valueOf(selectedPlot.getLength()));
+                lengthField.setPromptText("Length");
+
+                TextField widthField = new TextField(String.valueOf(selectedPlot.getWidth()));
+                widthField.setPromptText("Width");
+
+                TextField locationField = new TextField(selectedPlot.getLocation());
+                locationField.setPromptText("Location");
+
+                TextField gpsField = new TextField(selectedPlot.getGpsCoordinates());
+                gpsField.setPromptText("GPS Coordinates");
+
+                TextField statusField = new TextField(selectedPlot.getStatus());
+                statusField.setPromptText("Status");
+
+                TextField priceUnitField = new TextField(String.valueOf(selectedPlot.getPricePerUnit()));
+                priceUnitField.setPromptText("Price Per Unit");
+
+                TextField developmentField = new TextField(selectedPlot.getDevelopmentStatus());
+                developmentField.setPromptText("Development Status");
+
+                Button saveButton = new Button("Save Changes");
+                saveButton.setOnAction(event -> {
+                    try {
+                        selectedPlot.setPlotNumber(numberField.getText());
+                        selectedPlot.setLength(Double.parseDouble(lengthField.getText()));
+                        selectedPlot.setWidth(Double.parseDouble(widthField.getText()));
+                        selectedPlot.setLocation(locationField.getText());
+                        selectedPlot.setGpsCoordinates(gpsField.getText());
+                        selectedPlot.setStatus(statusField.getText());
+                        selectedPlot.setPricePerUnit(Double.parseDouble(priceUnitField.getText()));
+                        selectedPlot.setTotalArea(selectedPlot.getLength() * selectedPlot.getWidth());
+                        selectedPlot.setTotalPrice(selectedPlot.getTotalArea() * selectedPlot.getPricePerUnit());
+                        selectedPlot.setDevelopmentStatus(developmentField.getText());
+
+                        plotTable.refresh();
+                        savePlots(plotTable.getItems());
+                        editStage.close();
+                    } catch (NumberFormatException ex) {
+                        System.out.println("Invalid input values.");
+                    }
+                });
+
+                editVBox.getChildren().addAll(numberField, lengthField, widthField, locationField, gpsField, statusField, priceUnitField, developmentField, saveButton);
+                editStage.setScene(new Scene(editVBox, 400, 500));
+                editStage.setTitle("Edit Plot");
+                editStage.show();
+            }
+        });
+
+        // Delete plot functionality
+        deleteButton.setOnAction(e -> {
+            Plot selectedPlot = plotTable.getSelectionModel().getSelectedItem();
+            if (selectedPlot != null) {
+                plotTable.getItems().remove(selectedPlot);
+                savePlots(plotTable.getItems());
+            }
+        });
+
+        // Back button to return to admin dashboard
+        Button backButton = new Button("Back");
+        backButton.setOnAction(e -> adminDashboardScene(stage));
+
+        // Layout adjustments
+        HBox buttonBox = new HBox(10, addButton, editButton, deleteButton);
+        buttonBox.setAlignment(Pos.CENTER);
+
+        vBox.getChildren().addAll(plotTable, buttonBox, backButton);
+
+        Scene scene = new Scene(vBox, 1000, 700);
+        stage.setScene(scene);
+        stage.setTitle("Plot Management");
+    }
+
+    public static void managePaymentsScene(Stage stage){
+        VBox layout = new VBox(10);
+        layout.setPadding(new Insets(10));
+
+        // Display all payments
+        ListView<Payment> paymentListView = new ListView<>();
+        paymentListView.getItems().setAll(loadPayments());  // Assuming loadPayments() returns the list of payments
+
+        // Button to add a new payment
+        Button addPaymentButton = new Button("Add Payment");
+        addPaymentButton.setOnAction(e -> {
+            // Open a new scene to add payment details (you can implement a dialog or new scene here)
+            System.out.println("Adding a new payment...");
+        });
+
+        // Button to remove a selected payment
+        Button removePaymentButton = new Button("Remove Payment");
+        removePaymentButton.setOnAction(e -> {
+            Payment selectedPayment = paymentListView.getSelectionModel().getSelectedItem();
+            if (selectedPayment != null) {
+                ObservableList<Payment> payments = loadPayments();
+                payments.remove(selectedPayment);
+                savePayments(payments);
+                paymentListView.getItems().setAll(loadPayments()); // Refresh the list view
+                System.out.println("Payment removed: " + selectedPayment);
+            } else {
+                System.out.println("Please select a payment to remove.");
+            }
+        });
+
+        // Button to update payment details
+        Button updatePaymentButton = new Button("Update Payment");
+        updatePaymentButton.setOnAction(e -> {
+            Payment selectedPayment = paymentListView.getSelectionModel().getSelectedItem();
+            if (selectedPayment != null) {
+                // Open a new scene or dialog to update payment details
+                System.out.println("Updating payment: " + selectedPayment);
+            } else {
+                System.out.println("Please select a payment to update.");
+            }
+        });
+
+        // Add components to layout
+        layout.getChildren().addAll(paymentListView, addPaymentButton, removePaymentButton, updatePaymentButton);
+
+        // Create and show the scene
+        Scene scene = new Scene(layout, 400, 400);
+        stage.setScene(scene);
+        stage.setTitle("Manage Payments");
+        stage.show();
+    }
+    public static void generateReportScene(Stage stage){
+        VBox layout = new VBox(10);
+        layout.setPadding(new Insets(10));
+
+        // Generate the report (can be based on the Analytics class or Admin methods)
+        String report = generateReports();  // Assuming generateReports() generates a report string
+        String plotStatistics = analyzePlotStatistics();  // Assuming analyzePlotStatistics() returns plot statistics
+
+        // Display the reports in TextAreas or Labels
+        final TextArea reportTextArea = new TextArea(report + "\n\n" + plotStatistics);
+        reportTextArea.setEditable(false);  // Make the report area read-only
+        reportTextArea.setWrapText(true);
+
+        // Button to print the report (or generate a PDF if needed)
+        Button printButton = new Button("Print Report");
+        reportTextArea.setEditable(false);
+
+        // Sample report data - you will call the report generation method here
+        reportTextArea.setText(report);
+        // Print button logic
+        printButton.setOnAction(e -> {
+            // Print the content of reportTextArea
+            String contentToPrint = reportTextArea.getText();
+            if (!contentToPrint.isEmpty()) {
+                print(contentToPrint);  // You need to implement this print function
+            } else {
+                Alert alert = new Alert(Alert.AlertType.WARNING, "No report to print!");
+                alert.show();
+            }
+        });
+
+        // Button to close the report scene
+        Button closeButton = new Button("Close");
+        closeButton.setOnAction(e -> {
+            stage.close();  // Close the report scene
+        });
+
+        // Add components to layout
+        layout.getChildren().addAll(reportTextArea, printButton, closeButton);
+
+        // Create and show the scene
+        Scene scene = new Scene(layout, 600, 400);
+        stage.setScene(scene);
+        stage.setTitle("Generate Report");
+        stage.show();
+    }
+    private static void print(String content) {
+        // Create a PrinterJob
+        PrinterJob printerJob = PrinterJob.createPrinterJob();
+
+        if (printerJob == null) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "No printers found. Please check your printer setup.");
+            alert.show();
+            return;
         }
 
-        public Scene getScene() {
-            return scene;
+        // Prepare the content to print
+        Text printableContent = new Text(content);
+        printableContent.setWrappingWidth(500); // Set the width for the printable text if needed
+
+        // Show print dialog to the user
+        boolean proceed = printerJob.showPrintDialog(null); // Pass a stage here if available
+
+        if (proceed) {
+            // Print the content
+            boolean success = printerJob.printPage(printableContent);
+
+            if (success) {
+                printerJob.endJob();
+                Alert alert = new Alert(Alert.AlertType.INFORMATION, "Printing complete.");
+                alert.show();
+            } else {
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Failed to print.");
+                alert.show();
+            }
+        } else {
+            // User cancelled the print dialog
+            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Printing cancelled.");
+            alert.show();
         }
     }
     public static void buyerDashboard(Stage stage){
@@ -206,6 +622,9 @@ public class HelloApplication extends Application{
             updatePreference(stage);
         });
         logout.setOnAction(e->{
+            buyerDashboard(stage);
+        });
+        exit.setOnAction(e->{
             stage.close();
         });
         vBox.getChildren().addAll(viewPlots,requestPlot,ownershipDetails,trackPaymentStatus,updatePreference,exit, logout);
@@ -267,80 +686,14 @@ public class HelloApplication extends Application{
             Buyer buyer = new Buyer(usernameField.getText(), passwordField.getText(), "Buyer", emailField.getText(), phoneNumberField.getText(), preferredLocationField.getText(),Double.parseDouble(preferredSizeField.getText()),Double.parseDouble(budgetField.getText()));
             buyers.add(buyer);
             users.add(buyer);
-            saveBuyers(buyers);
-            saveUsers(users);
+            saveBuyers((ObservableList<Buyer>) buyers);
+            saveUsers((ObservableList<User>) users);
             buyerDashboard(stage);
         });
         vBox.getChildren().add(login);
         Scene scene = new Scene(vBox, 800, 800);
         stage.setScene(scene);
         stage.setTitle("Login Screen");
-    }
-    public static List<User> loadUsers() {
-        List<User> users = null;
-        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("Users.ser"))) {
-            users = (List<User>) inputStream.readObject();
-            userCount=users.size()+1;
-        } catch (FileNotFoundException e) {
-            System.out.println("Users file not found. Starting with an empty list.");
-            users = new ArrayList<>();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        catch(NullPointerException e){
-            users = new ArrayList<>();
-        }
-        return users;
-    }
-
-    public static void saveUsers(List<User> users) {
-        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("Users.ser"))) {
-            outputStream.writeObject(users);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    public static List<Buyer> loadBuyers() {
-        List<Buyer> buyers = new ArrayList<>();
-        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("Buyers.ser"))) {
-            buyers = (List<Buyer>) inputStream.readObject();
-        }catch (FileNotFoundException e){
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException  e) {
-            e.printStackTrace();
-        }
-        return buyers;
-    }
-
-    public static void saveBuyers(List<Buyer> buyers) {
-        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("Buyers.ser"))) {
-            outputStream.writeObject(buyers);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    private static ObservableList<Plot> loadPlots() {
-        ObservableList<Plot> plots = FXCollections.observableArrayList();
-        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("Plots.ser"))) {
-            List<Plot> plotList = (List<Plot>) inputStream.readObject();
-            plots.addAll(plotList);
-        } catch (FileNotFoundException e) {
-            System.out.println("Users file not found. Starting with an empty list.");
-        }
-        catch (IOException | ClassNotFoundException| NullPointerException e) {
-            e.printStackTrace();
-        }
-        return plots;
-    }
-
-    private static void savePlots(List<Plot> plots) {
-        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("Plots.ser"))) {
-            outputStream.writeObject(plots);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private static void viewPlots(Stage stage){
@@ -565,26 +918,6 @@ public class HelloApplication extends Application{
         stage.setTitle("Track Payment Status");
     }
 
-    public static List<Document> loadDocuments() {
-        List<Document> documents = null;
-        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("Documents.ser"))) {
-            documents = (List<Document>) inputStream.readObject();
-        } catch (FileNotFoundException e) {
-            System.out.println("Document file not found. Starting with an empty list.");
-            documents = new ArrayList<>();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return documents;
-    }
-
-    public static void saveDocuments(List<Document> plots) {
-        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("Documents.ser"))) {
-            outputStream.writeObject(plots);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
     private static void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
@@ -592,28 +925,7 @@ public class HelloApplication extends Application{
         alert.setContentText(message);
         alert.showAndWait();
     }
-    public static List<Payment> loadPayments(){
-        List<Payment> payments = null;
-        try(ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("Payments.ser"))){
-            payments=(List<Payment>) inputStream.readObject();
-        }
-        catch (IOException e){
-            e.printStackTrace();
-        }
-        catch (ClassNotFoundException e){
-            e.printStackTrace();
-        }
-        return payments;
-    }
 
-    public static void savePayments(List<Payment> payments){
-        try(ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("Payments.ser"))){
-            outputStream.writeObject(payments);
-        }
-        catch (IOException e){
-            e.printStackTrace();
-        }
-    }
     public static void updatePreference(Stage stage) {
         VBox vBox = new VBox();
         Label label = new Label("Update Preferences");
@@ -672,6 +984,122 @@ public class HelloApplication extends Application{
         stage.setScene(scene);
         stage.setTitle("Update Preferences");
     }
+    // Load Users as ObservableList
+    public static ObservableList<User> loadUsers() {
+        ObservableList<User> users = FXCollections.observableArrayList();
+        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("Users.ser"))) {
+            List<User> userList = (List<User>) inputStream.readObject();
+            users.addAll(userList); // Add all items to ObservableList
+            userCount = users.size() + 1; // Assuming `userCount` is declared elsewhere.
+        } catch (FileNotFoundException e) {
+            System.out.println("Users file not found. Starting with an empty list.");
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
+
+    // Save Users
+    public static void saveUsers(ObservableList<User> users) {
+        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("Users.ser"))) {
+            outputStream.writeObject(new ArrayList<>(users)); // Convert ObservableList to ArrayList
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Load Buyers as ObservableList
+    public static ObservableList<Buyer> loadBuyers() {
+        ObservableList<Buyer> buyers = FXCollections.observableArrayList();
+        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("Buyers.ser"))) {
+            List<Buyer> buyerList = (List<Buyer>) inputStream.readObject();
+            buyers.addAll(buyerList);
+        } catch (FileNotFoundException e) {
+            System.out.println("Buyers file not found. Starting with an empty list.");
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return buyers;
+    }
+
+    // Save Buyers
+    public static void saveBuyers(ObservableList<Buyer> buyers) {
+        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("Buyers.ser"))) {
+            outputStream.writeObject(new ArrayList<>(buyers));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Load Plots as ObservableList
+    public static ObservableList<Plot> loadPlots() {
+        ObservableList<Plot> plots = FXCollections.observableArrayList();
+        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("Plots.ser"))) {
+            List<Plot> plotList = (List<Plot>) inputStream.readObject();
+            plots.addAll(plotList);
+        } catch (FileNotFoundException e) {
+            System.out.println("Plots file not found. Starting with an empty list.");
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return plots;
+    }
+
+    // Save Plots
+    public static void savePlots(ObservableList<Plot> plots) {
+        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("Plots.ser"))) {
+            outputStream.writeObject(new ArrayList<>(plots));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Load Payments as ObservableList
+    public static ObservableList<Payment> loadPayments() {
+        ObservableList<Payment> payments = FXCollections.observableArrayList();
+        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("Payments.ser"))) {
+            List<Payment> paymentList = (List<Payment>) inputStream.readObject();
+            payments.addAll(paymentList);
+        } catch (FileNotFoundException e) {
+            System.out.println("Payments file not found. Starting with an empty list.");
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return payments;
+    }
+
+    // Save Payments
+    public static void savePayments(ObservableList<Payment> payments) {
+        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("Payments.ser"))) {
+            outputStream.writeObject(new ArrayList<>(payments));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Load Documents as ObservableList
+    public static ObservableList<Document> loadDocuments() {
+        ObservableList<Document> documents = FXCollections.observableArrayList();
+        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("Documents.ser"))) {
+            List<Document> documentList = (List<Document>) inputStream.readObject();
+            documents.addAll(documentList);
+        } catch (FileNotFoundException e) {
+            System.out.println("Documents file not found. Starting with an empty list.");
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return documents;
+    }
+
+    // Save Documents
+    public static void saveDocuments(ObservableList<Document> documents) {
+        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("Documents.ser"))) {
+            outputStream.writeObject(new ArrayList<>(documents));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
 }

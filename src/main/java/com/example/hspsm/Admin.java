@@ -142,96 +142,96 @@ public class Admin extends User{
 //            }
 //        }
 //    }
-
-    private static void addUser(List<User> users, Scanner scanner) {
-        scanner.nextLine(); // Consume newline
-        System.out.print("Enter Username: ");
-        String username = scanner.nextLine();
-        System.out.print("Enter Password: ");
-        String password = scanner.nextLine();
-        System.out.print("Enter Role (Admin/Buyer): ");
-        String role = scanner.nextLine();
-        System.out.print("Enter Email: ");
-        String email = scanner.nextLine();
-        System.out.print("Enter Phone Number: ");
-        String phoneNumber = scanner.nextLine();
-
-        users.add(new User(username, password, role, email, phoneNumber));
-        System.out.println("User added successfully!");
-    }
-
-    private static void deleteUser(List<User> users, Scanner scanner) {
-        System.out.print("Enter User ID to delete: ");
-        String userId = scanner.nextLine();
-
-        boolean found = users.removeIf(user -> user.getUserId().equals(userId));
-        if (found) {
-            System.out.println("User deleted successfully!");
-        } else {
-            System.out.println("User not found!");
-        }
-    }
-
-    private static void updateUser(List<User> users, Scanner scanner) {
-        System.out.print("Enter User ID to update: ");
-        String userId = scanner.nextLine();
-        scanner.nextLine(); // Consume newline
-
-        for (User user : users) {
-            if (user.getUserId().equals(userId)) {
-                System.out.print("Enter new Email (leave blank to keep unchanged): ");
-                String email = scanner.nextLine();
-                if (!email.isBlank()) user.setEmail(email);
-
-                System.out.print("Enter new Phone Number (leave blank to keep unchanged): ");
-                String phoneNumber = scanner.nextLine();
-                if (!phoneNumber.isBlank()) user.setPhoneNumber(phoneNumber);
-
-                System.out.print("Enter new Role (leave blank to keep unchanged): ");
-                String role = scanner.nextLine();
-                if (!role.isBlank()) user.setRole(role);
-
-                System.out.println("User updated successfully!");
-                return;
-            }
-        }
-        System.out.println("User not found!");
-    }
-
-    private static void viewAllUsers(List<User> users) {
-        if (users.isEmpty()) {
-            System.out.println("No users to display.");
-            return;
-        }
-        System.out.println("\n--- All Users ---");
-        for (User user : users) {
-            System.out.println("ID: " + user.getUserId() +
-                    "\nUsername: " + user.getUsername() +
-                    "\nRole: " + user.getRole() +
-                    "\nEmail: " + user.getEmail() +
-                    "\nPhone: " + user.getPhoneNumber() +
-                    "\nRegistered On: " + user.getRegistrationDate());
-        }
-    }
-
-    private static void searchUser(List<User> users, Scanner scanner) {
-        System.out.print("Enter User ID to search: ");
-        String userId = scanner.nextLine();
-
-        for (User user : users) {
-            if (user.getUserId().equals(userId)) {
-                System.out.println("\nUser Details:");
-                System.out.println("ID: " + user.getUserId());
-                System.out.println("Username: " + user.getUsername());
-                System.out.println("Role: " + user.getRole());
-                System.out.println("Email: " + user.getEmail());
-                System.out.println("Phone: " + user.getPhoneNumber());
-                System.out.println("Registered On: " + user.getRegistrationDate());
-                return;
-            }
-        }
-        System.out.println("User not found!");
-    }
+//
+//    private static void addUser(List<User> users, Scanner scanner) {
+//        scanner.nextLine(); // Consume newline
+//        System.out.print("Enter Username: ");
+//        String username = scanner.nextLine();
+//        System.out.print("Enter Password: ");
+//        String password = scanner.nextLine();
+//        System.out.print("Enter Role (Admin/Buyer): ");
+//        String role = scanner.nextLine();
+//        System.out.print("Enter Email: ");
+//        String email = scanner.nextLine();
+//        System.out.print("Enter Phone Number: ");
+//        String phoneNumber = scanner.nextLine();
+//
+//        users.add(new User(username, password, role, email, phoneNumber));
+//        System.out.println("User added successfully!");
+//    }
+//
+//    private static void deleteUser(List<User> users, Scanner scanner) {
+//        System.out.print("Enter User ID to delete: ");
+//        String userId = scanner.nextLine();
+//
+//        boolean found = users.removeIf(user -> user.getUserId().equals(userId));
+//        if (found) {
+//            System.out.println("User deleted successfully!");
+//        } else {
+//            System.out.println("User not found!");
+//        }
+//    }
+//
+//    private static void updateUser(List<User> users, Scanner scanner) {
+//        System.out.print("Enter User ID to update: ");
+//        String userId = scanner.nextLine();
+//        scanner.nextLine(); // Consume newline
+//
+//        for (User user : users) {
+//            if (user.getUserId().equals(userId)) {
+//                System.out.print("Enter new Email (leave blank to keep unchanged): ");
+//                String email = scanner.nextLine();
+//                if (!email.isBlank()) user.setEmail(email);
+//
+//                System.out.print("Enter new Phone Number (leave blank to keep unchanged): ");
+//                String phoneNumber = scanner.nextLine();
+//                if (!phoneNumber.isBlank()) user.setPhoneNumber(phoneNumber);
+//
+//                System.out.print("Enter new Role (leave blank to keep unchanged): ");
+//                String role = scanner.nextLine();
+//                if (!role.isBlank()) user.setRole(role);
+//
+//                System.out.println("User updated successfully!");
+//                return;
+//            }
+//        }
+//        System.out.println("User not found!");
+//    }
+//
+//    private static void viewAllUsers(List<User> users) {
+//        if (users.isEmpty()) {
+//            System.out.println("No users to display.");
+//            return;
+//        }
+//        System.out.println("\n--- All Users ---");
+//        for (User user : users) {
+//            System.out.println("ID: " + user.getUserId() +
+//                    "\nUsername: " + user.getUsername() +
+//                    "\nRole: " + user.getRole() +
+//                    "\nEmail: " + user.getEmail() +
+//                    "\nPhone: " + user.getPhoneNumber() +
+//                    "\nRegistered On: " + user.getRegistrationDate());
+//        }
+//    }
+//
+//    private static void searchUser(List<User> users, Scanner scanner) {
+//        System.out.print("Enter User ID to search: ");
+//        String userId = scanner.nextLine();
+//
+//        for (User user : users) {
+//            if (user.getUserId().equals(userId)) {
+//                System.out.println("\nUser Details:");
+//                System.out.println("ID: " + user.getUserId());
+//                System.out.println("Username: " + user.getUsername());
+//                System.out.println("Role: " + user.getRole());
+//                System.out.println("Email: " + user.getEmail());
+//                System.out.println("Phone: " + user.getPhoneNumber());
+//                System.out.println("Registered On: " + user.getRegistrationDate());
+//                return;
+//            }
+//        }
+//        System.out.println("User not found!");
+//    }
 
 //    public static List<User> loadUsers() {
 //        List<User> users = null;
