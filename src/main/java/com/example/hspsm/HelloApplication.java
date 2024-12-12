@@ -14,7 +14,6 @@ import javafx.stage.Stage;
 
 import java.time.LocalDate;
 import java.util.*;
-import javafx.scene.*;
 
 import java.io.*;
 
@@ -51,6 +50,17 @@ public class HelloApplication extends Application{
         TextField usernameField = new TextField();
         PasswordField passwordField = new PasswordField();
         Button login = new Button("Login");
+    //    Button login = new Button("Login");
+        login.setOnAction(e -> {
+            if (usernameField.getText().equals("admin") && passwordField.getText().equals("admin")) {
+                adminDashboardScene(stage);
+            } else {
+                // Handle invalid credentials
+                Text invalid = new Text("Invalid Username or Password");
+                vBox.getChildren().add(invalid);
+            }
+        });
+
         List<User> users = loadUsers();
         if(users!=null)
         {
@@ -86,8 +96,90 @@ public class HelloApplication extends Application{
     }
 
     public static void adminDashboardScene(Stage stage) {
+        VBox vBox = new VBox();
+        vBox.setAlignment(Pos.CENTER);
+        vBox.setSpacing(10);
 
+        Label titleLabel = new Label("Admin Dashboard");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+        vBox.getChildren().add(titleLabel);
 
+        // Buttons for different functionalities
+        Button manageUsersButton = new Button("Manage Users");
+        Button managePlotsButton = new Button("Manage Plots");
+        Button managePaymentsButton = new Button("Manage Payments");
+        Button generateReportsButton = new Button("Generate Reports");
+        Button systemSettingsButton = new Button("System Settings");
+        Button logoutButton = new Button("Logout");
+
+        // Add buttons to the VBox
+        vBox.getChildren().addAll(manageUsersButton, managePlotsButton, managePaymentsButton,
+                generateReportsButton, systemSettingsButton, logoutButton);
+
+        // Button action handlers
+        manageUsersButton.setOnAction(e -> {
+            // Implement user management functionality here
+            // This might involve displaying a table of users, providing options to add, edit, or delete users
+            // ...
+            // For example, you could create a new scene:
+            UserManagementScene userManagementScene = new UserManagementScene(stage);
+            stage.setScene(userManagementScene.getScene());
+        });
+
+        managePlotsButton.setOnAction(e -> {
+            // Implement plot management functionality here
+            // ...
+        });
+
+        managePaymentsButton.setOnAction(e -> {
+            // Implement payment management functionality here
+            // ...
+        });
+
+        generateReportsButton.setOnAction(e -> {
+            // Implement report generation functionality here
+            // ...
+        });
+
+        systemSettingsButton.setOnAction(e -> {
+            // Implement system settings functionality here
+            // ...
+        });
+
+        logoutButton.setOnAction(e -> {
+            // Implement logout functionality, e.g., return to login screen
+            loginScreen(stage);
+        });
+
+        Scene scene = new Scene(vBox, 800, 600);
+        stage.setScene(scene);
+        stage.setTitle("Admin Dashboard");
+    }
+
+    static class UserManagementScene {
+        private final Scene scene;
+
+        public UserManagementScene(Stage stage) {
+            VBox vBox = new VBox();
+            vBox.setAlignment(Pos.CENTER);
+            vBox.setSpacing(10);
+
+            Label titleLabel = new Label("User Management");
+            titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+            vBox.getChildren().add(titleLabel);
+
+            // ... Add controls for adding, editing, and deleting users
+
+            Button backButton = new Button("Back");
+            backButton.setOnAction(e -> adminDashboardScene(stage));
+            vBox.getChildren().add(backButton);
+
+            scene = new Scene(vBox, 800, 600);
+        }
+
+        public Scene getScene() {
+            return scene;
+        }
     }
     public static void buyerDashboard(Stage stage){
         VBox vBox = new VBox();
